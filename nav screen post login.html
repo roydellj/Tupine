@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRE Data Processing Portal</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #2c3e50;
+            --success: #2ecc71;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-name {
+            margin-right: 15px;
+        }
+        
+        .logout-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        main {
+            min-height: calc(100vh - 200px);
+            padding: 40px 0;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        h1, h2, h3 {
+            color: var(--dark);
+        }
+        
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+        
+        .process-options {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .option-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            width: 300px;
+            text-align: center;
+            padding: 30px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        
+        .option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .option-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .option-card p {
+            color: #666;
+            margin-bottom: 25px;
+        }
+        
+        .option-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .option-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .upload-section {
+            display: none;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .upload-section.active {
+            display: block;
+        }
+        
+        .back-btn {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark);
+        }
+        
+        select, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .submit-btn {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .submit-btn:hover {
+            background-color: #27ae60;
+        }
+        
+        footer {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 14px;
+        }
+        
+        /* File upload styling */
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+            margin: 10px 0;
+            background-color: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 6px;
+            text-align: center;
+            padding: 30px;
+            transition: all 0.3s;
+        }
+        
+        .file-upload:hover {
+            background-color: #f1f1f1;
+            border-color: #ccc;
+        }
+        
+        .file-upload-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #666;
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            font-size: 100px;
+            opacity: 0;
+            right: 0;
+            top: 0;
+            cursor: pointer;
+            height: 100%;
+            width: 100%;
+        }
+        
+        .file-upload-btn {
+            background-color: var(--secondary);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 4px;
+            display: inline-block;
+            cursor: pointer;
+        }
+        
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--secondary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">CRE Data Portal</div>
+            <div class="user-info">
+                <span class="user-name">Welcome, User</span>
+                <button class="logout-btn">Logout</button>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <!-- Main Options Screen -->
+            <div class="main-screen" id="mainScreen">
+                <div class="welcome-section">
+                    <h1>Welcome to the CRE Data Processing Portal</h1>
+                    <p>Select the type of document you'd like to process</p>
+                </div>
+                
+                <div class="process-options">
+                    <div class="option-card" onclick="showUploadSection('rentRoll')">
+                        <h3>Rent Roll</h3>
+                        <p>Process and standardize rent roll data from various formats</p>
+                        <button class="option-btn">Process Rent Roll</button>
+                    </div>
+                    
+                    <div class="option-card" onclick="showUploadSection('financialStatement')">
+                        <h3>Financial Statement</h3>
+                        <p>Convert and analyze historical financial statements</p>
+                        <button class="option-btn">Process Financial Statement</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rent Roll Upload Section -->
+            <div class="upload-section" id="rentRollSection">
+                <button class="back-btn" onclick="showMainScreen()">← Back to options</button>
+                <div class="card">
+                    <h2>Process Rent Roll</h2>
+                    <form id="rentRollForm" action="/process-rent-roll" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="propertyType">Property Type</label>
+                            <select id="propertyType" name="propertyType" required>
+                                <option value="" selected disabled>Select property type</option>
+                                <option value="multifamily">Multifamily</option>
+                                <option value="industrial">Industrial</option>
+                                <option value="seniorLiving">Senior Living</option>
+                                <option value="studentHousing">Student Housing</option>
+                                <option value="retail">Retail</option>
+                                <option value="mixedUse">Mixed-Use</option>
+                                <option value="office">Office</option>
+                                <option value="hotel">Hotel</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="file-upload">
+                                <span class="file-upload-label">Upload Rent Roll Document</span>
+                                <span class="file-upload-btn">Choose File</span>
+                                <input type="file" id="rentRollFile" name="file" accept=".xlsx,.xls,.pdf,.csv" required>
+                                <div class="file-name" id="rentRollFileName">No file selected</div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Process Document</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Financial Statement Upload Section -->
+            <div class="upload-section" id="financialStatementSection">
+                <button class="back-btn" onclick="showMainScreen()">← Back to options</button>
+                <div class="card">
+                    <h2>Process Financial Statement</h2>
+                    <form id="financialStatementForm" action="/process-financial" method="post" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="finPropertyType">Property Type</label>
+                            <select id="finPropertyType" name="propertyType" required>
+                                <option value="" selected disabled>Select property type</option>
+                                <option value="multifamily">Multifamily</option>
+                                <option value="industrial">Industrial</option>
+                                <option value="seniorLiving">Senior Living</option>
+                                <option value="studentHousing">Student Housing</option>
+                                <option value="retail">Retail</option>
+                                <option value="mixedUse">Mixed-Use</option>
+                                <option value="office">Office</option>
+                                <option value="hotel">Hotel</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="file-upload">
+                                <span class="file-upload-label">Upload Financial Statement</span>
+                                <span class="file-upload-btn">Choose File</span>
+                                <input type="file" id="financialFile" name="file" accept=".xlsx,.xls,.pdf,.csv" required>
+                                <div class="file-name" id="financialFileName">No file selected</div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="submit-btn">Process Document</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Loading Indicator -->
+            <div class="loading" id="loadingIndicator">
+                <div class="spinner"></div>
+                <p>Processing your document. This may take a moment...</p>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 CRE Data Processing Portal. All rights reserved.</p>
+        </div>
+    </footer>
+    
+    <script>
+        // Show the selected upload section
+        function showUploadSection(type) {
+            document.getElementById('mainScreen').style.display = 'none';
+            
+            if (type === 'rentRoll') {
+                document.getElementById('rentRollSection').classList.add('active');
+                document.getElementById('financialStatementSection').classList.remove('active');
+            } else if (type === 'financialStatement') {
+                document.getElementById('financialStatementSection').classList.add('active');
+                document.getElementById('rentRollSection').classList.remove('active');
+            }
+        }
+        
+        // Show the main screen
+        function showMainScreen() {
+            document.getElementById('mainScreen').style.display = 'block';
+            document.getElementById('rentRollSection').classList.remove('active');
+            document.getElementById('financialStatementSection').classList.remove('active');
+        }
+        
+        // Display file name when selected
+        document.getElementById('rentRollFile').addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'No file selected';
+            document.getElementById('rentRollFileName').textContent = fileName;
+        });
+        
+        document.getElementById('financialFile').addEventListener('change', function() {
+            const fileName = this.files[0] ? this.files[0].name : 'No file selected';
+            document.getElementById('financialFileName').textContent = fileName;
+        });
+        
+        // Show loading indicator on form submission
+        document.getElementById('rentRollForm').addEventListener('submit', function() {
+            document.getElementById('rentRollSection').classList.remove('active');
+            document.getElementById('loadingIndicator').style.display = 'block';
+        });
+        
+        document.getElementById('financialStatementForm').addEventListener('submit', function() {
+            document.getElementById('financialStatementSection').classList.remove('active');
+            document.getElementById('loadingIndicator').style.display = 'block';
+        });
+    </script>
+</body>
+</html>

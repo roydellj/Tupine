@@ -1,0 +1,128 @@
+import pandas as pd
+import numpy as np
+from app.utils.column_mapper import identify_columns, contains_rent_roll_columns
+
+def process_multifamily_excel(file_path):
+    """Process multifamily rent rolls from Excel"""
+    try:
+        # Try multiple sheets as rent rolls often have different formats
+        sheets = pd.read_excel(file_path, sheet_name=None)
+        
+        # Look for the sheet that's most likely to contain rent roll data
+        rent_roll_df = None
+        for name, sheet in sheets.items():
+            # Check if this sheet looks like a rent roll (has key columns)
+            if contains_rent_roll_columns(sheet):
+                rent_roll_df = sheet
+                break
+        
+        if rent_roll_df is None:
+            # If no sheet found, try the first sheet
+            sheet_name = list(sheets.keys())[0]
+            rent_roll_df = sheets[sheet_name]
+            
+        # Standardize the data
+        standardized_data = standardize_multifamily_rent_roll(rent_roll_df)
+        
+        # Calculate key metrics
+        metrics = calculate_multifamily_metrics(standardized_data)
+        
+        return {
+            'success': True,
+            'data': standardized_data.to_dict(orient='records'),
+            'metrics': metrics
+        }
+        
+    except Exception as e:
+        return {'error': str(e), 'success': False}
+
+def process_multifamily_pdf(file_path):
+    """Extract rent roll data from PDF files"""
+    try:
+        import tabula  # For table extraction
+        
+        # Extract tables from PDF
+        tables = tabula.read_pdf(file_path, pages='all', multiple_tables=True)
+        
+        if len(tables) == 0:
+            return {'error': 'No tables found in PDF', 'success': False}
+        
+        # Find the table that looks most like a rent roll
+        rent_roll_df = None
+        for table in tables:
+            if contains_rent_roll_columns(table):
+                rent_roll_df = table
+                break
+                
+        if rent_roll_df is None:
+            # Use the largest table as a fallback
+            rent_roll_df = max(tables, key=lambda t: t.shape[0] * t.shape[1])
+            
+        # Standardize the data
+        standardized_data = standardize_multifamily_rent_roll(rent_roll_df)
+        
+        # Calculate key metrics
+        metrics = calculate_multifamily_metrics(standardized_data)
+        
+        return {
+            'success': True,
+            'data': standardized_data.to_dict(orient='records'),
+            'metrics': metrics
+        }
+        
+    except Exception as e:
+        return {'error': f'PDF processing error: {str(e)}', 'success': False}
+
+def standardize_multifamily_rent_roll(df):
+    """Standardize multifamily rent roll data"""
+    # Make a copy to avoid modifying original
+    std_df = df.copy()
+    
+    # Standardize column names
+    column_mapping = identify_columns(std_df, property_type='multifamily')
+    
+    # Create a new dataframe with standardized columns
+    result_df = pd.DataFrame()
+    
+    # Map identified columns to standard names
+    if 'unit' in column_mapping:
+        result_df['unit'] = std_df[column_mapping['unit']]
+    
+    if 'tenant_name' in column_mapping:
+        result_df['tenant_name'] = std_df[column_mapping['tenant_name']]
+    
+    if 'lease_start' in column_mapping:
+        result_df['lease_start'] = pd.to_datetime(
+            std_df[column_mapping['lease_start']], 
+            errors='coerce'
+        )
+    
+    if 'lease_end' in column_mapping:
+        result_df['lease_end'] = pd.to_datetime(
+            std_df[column_mapping['lease_end']], 
+            errors='coerce'
+        )
+    
+    if 'monthly_rent' in column_mapping:
+        result_df['monthly_rent'] = pd.to_numeric(
+            std_df[column_mapping['monthly_rent']].astype(str)
+                .str.replace('$', '', regex=False)
+                .str.replace(',', '', regex=False),
+            errors='coerce'
+        )
+    
+    if 'sqft' in column_mapping:
+        result_df['sqft'] = pd.to_numeric(
+            std_df[column_mapping['sqft']].astype(str)
+                .str.replace(',', '', regex=False),
+            errors='coerce'
+        )
+    
+    # Add calculated fields
+    if 'monthly_rent' in result_df.columns and 'sqft' in result_df.columns:
+        result_df['rent_per_sqft'] = result_df['monthly_rent'] / result_df['sqft']
+    
+    # Clean up data - remove rows with no unit or tenant
+    result_df = result_df.dropna(subset=['unit'], how='all')
+    
+    return result_df
